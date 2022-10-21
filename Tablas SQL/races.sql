@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS races(
+  raceId INT NOT NULL,
+  `year` INT NOT NULL,
+  round INT NULL,
+  circuitId INT NULL,
+  `name` VARCHAR(45) NOT NULL,
+  `date` DATE NULL,
+  `time` TIME NULL,
+  url VARCHAR(45) NULL,
+  fp1_date DATE NULL,
+  fp1_time TIME NULL,
+  fp2_date DATE NULL,
+  fp2_time TIME NULL,
+  fp3_date DATE NULL,
+  fp3_time TIME NULL,
+  quali_date DATE NULL,
+  quali_time TIME NULL,
+  sprint_date DATE NULL,
+  sprint_time TIME NULL,
+  PRIMARY KEY (`raceId`)
+)
