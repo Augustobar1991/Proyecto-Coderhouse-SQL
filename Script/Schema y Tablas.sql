@@ -27,10 +27,6 @@ CREATE TABLE IF NOT EXISTS constructor_standings (
   constructor_standingscol VARCHAR(45) NULL,
   PRIMARY KEY (constructorStandingsId, constructorId)
 );
-ALTER TABLE constructor_standings 
-	ADD CONSTRAINT raceId
-    FOREIGN KEY (raceId)
-    REFERENCES races (raceId)
 
 -- Crea Tabla constructors 
 CREATE TABLE IF NOT EXISTS constructors (
@@ -41,10 +37,6 @@ CREATE TABLE IF NOT EXISTS constructors (
   url TEXT(45) NULL,
   PRIMARY KEY (constructorId)
 );
-ALTER TABLE constructors
-	ADD CONSTRAINT constructorId
-    FOREIGN KEY (constructorId)
-    REFERENCES constructor_standings (constructorStandingsId)
 
 -- Crea Tabla driver 
 CREATE TABLE IF NOT EXISTS driver (
@@ -65,16 +57,12 @@ CREATE TABLE IF NOT EXISTS lap_times (
   Id int NOT NULL AUTO_INCREMENT,
   raceId INT NOT NULL,
   driverId INT NOT NULL,
-  lap VARCHAR(45) NULL,
+  lap INT NULL,
   position VARCHAR(45) NULL,
-  time TIME NULL,
+  time VARCHAR(45) NULL,
   milliseconds INT NULL,
   PRIMARY KEY (Id, raceId)
 );
-ALTER TABLE lap_times
-	ADD CONSTRAINT driverId
-	FOREIGN KEY (driverId)
-    REFERENCES driver (driverId);
 
 -- Crea Tabla qualifying
 CREATE TABLE IF NOT EXISTS qualifying (
@@ -84,15 +72,11 @@ CREATE TABLE IF NOT EXISTS qualifying (
   constructorId INT NOT NULL,
   `number` INT NULL,
   position INT NULL,
-  q1 TIME NULL,
-  q2 TIME NULL,
-  q3 TIME NULL,
+  q1 VARCHAR(45) NULL,
+  q2 VARCHAR(45) NULL,
+  q3 VARCHAR(45) NULL,
   PRIMARY KEY (qualifyId)
 );
-ALTER TABLE qualifying
-	ADD CONSTRAINT driverId1
-    FOREIGN KEY (driverId)
-    REFERENCES driver (driverId);
 
 -- Crea Tabla races
 CREATE TABLE IF NOT EXISTS races(
@@ -116,11 +100,7 @@ CREATE TABLE IF NOT EXISTS races(
   sprint_time TIME NULL,
   PRIMARY KEY (raceId, circuitId)
 );
--- se corre luego de haber ejecutado todas las tablas
-ALTER TABLE races
-	ADD CONSTRAINT CircuitId
-	FOREIGN KEY (circuitId)
-    REFERENCES circuits (CircuitId); 
+
 
 -- Crea Tabla results y luego crea 2 FK
 CREATE TABLE IF NOT EXISTS results(
@@ -139,21 +119,12 @@ CREATE TABLE IF NOT EXISTS results(
   milliseconds INT NULL,
   fastestLap INT NULL,
   `rank` INT NULL,
-  fastestLapTime TIME NULL,
+  fastestLapTime VARCHAR(45) NULL,
   fastestLapSpeed INT NULL,
   statusId INT NULL,
   PRIMARY KEY (resultId, driverId)
 );
-SET FOREIGN_KEY_CHECKS=0;
-ALTER TABLE results
-	ADD CONSTRAINT driverId2
-    FOREIGN KEY (driverId)
-    REFERENCES driver (driverId);
 
-ALTER TABLE results
-	ADD CONSTRAINT raceId2
-    FOREIGN KEY (raceId)
-    REFERENCES races (raceId);
 
 -- Crea Tabla sprint_results
 CREATE TABLE IF NOT EXISTS sprint_results(
@@ -168,14 +139,52 @@ CREATE TABLE IF NOT EXISTS sprint_results(
   positionOrder INT NULL,
   points INT NULL,
   laps INT NULL,
-  `time` TIME NULL,
+  `time` VARCHAR(45) NULL,
   milliseconds INT NULL,
   fastestLap INT NULL,
-  fastestLapTime TIME NULL,
+  fastestLapTime VARCHAR(45) NULL,
   statusId INT NULL,
   PRIMARY KEY (resultId)
 );
- ALTER TABLE sprint_results
+
+SET FOREIGN_KEY_CHECKS=0;
+    
+ALTER TABLE constructor_standings 
+	ADD CONSTRAINT raceId
+    FOREIGN KEY (raceId)
+    REFERENCES races (raceId);
+    
+ALTER TABLE constructors
+	ADD CONSTRAINT constructorId
+    FOREIGN KEY (constructorId)
+    REFERENCES constructor_standings (constructorStandingsId);
+    
+ALTER TABLE qualifying
+	ADD CONSTRAINT driverId1
+    FOREIGN KEY (driverId)
+    REFERENCES driver (driverId);    
+    
+ALTER TABLE lap_times
+	ADD CONSTRAINT driverId
+	FOREIGN KEY (driverId)
+    REFERENCES driver (driverId);
+    
+ALTER TABLE races
+	ADD CONSTRAINT CircuitId
+	FOREIGN KEY (circuitId)
+    REFERENCES circuits (CircuitId); 
+    
+ALTER TABLE results
+	ADD CONSTRAINT raceId2
+    FOREIGN KEY (raceId)
+    REFERENCES races (raceId);
+
+ALTER TABLE results
+	ADD CONSTRAINT driverId2
+    FOREIGN KEY (driverId)
+    REFERENCES driver (driverId);      
+    
+ALTER TABLE sprint_results
 	ADD CONSTRAINT raceId1
     FOREIGN KEY (raceId)
     REFERENCES races (raceId);
@@ -184,3 +193,30 @@ ALTER TABLE sprint_results
 	ADD CONSTRAINT driverId3
     FOREIGN KEY (driverId)
     REFERENCES driver (driverId);
+    
+ALTER TABLE constructor_standings 
+	DROP CONSTRAINT raceId;
+    
+ALTER TABLE constructors
+	DROP CONSTRAINT constructorId;
+    
+ALTER TABLE qualifying
+	DROP CONSTRAINT driverId1; 
+    
+ALTER TABLE lap_times
+	DROP CONSTRAINT driverId;
+    
+ALTER TABLE races
+	DROP CONSTRAINT CircuitId;    
+    
+ALTER TABLE results
+	DROP CONSTRAINT raceId2;
+
+ALTER TABLE results
+	DROP CONSTRAINT driverId2;    
+    
+ALTER TABLE sprint_results
+	DROP FOREIGN KEY raceId1;
+
+ALTER TABLE sprint_results
+	DROP FOREIGN KEY driverId3;

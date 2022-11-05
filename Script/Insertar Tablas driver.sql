@@ -1,4 +1,5 @@
-insert into driver values (1,"hamilton",44,"HAM","Lewis","Hamilton",07/01/1985,"British","http://en.wikipedia.org/wiki/Lewis_Hamilton"),
+insert into driver values 
+(1,"hamilton",44,"HAM","Lewis","Hamilton",07/01/1985,"British","http://en.wikipedia.org/wiki/Lewis_Hamilton"),
 (2,"heidfeld",null,"HEI","Nick","Heidfeld",10/05/1977,"German","http://en.wikipedia.org/wiki/Nick_Heidfeld"),
 (3,"rosberg",6,"ROS","Nico","Rosberg",27/06/1985,"German","http://en.wikipedia.org/wiki/Nico_Rosberg"),
 (4,"alonso",14,"ALO","Fernando","Alonso",29/07/1981,"Spanish","http://en.wikipedia.org/wiki/Fernando_Alonso"),
@@ -747,7 +748,7 @@ insert into driver values (1,"hamilton",44,"HAM","Lewis","Hamilton",07/01/1985,"
 (747,"murray",null,"null","David","Murray",28/12/1909,"British","http://en.wikipedia.org/wiki/David_Murray_(driver)"),
 (748,"cantoni",null,"null","Eitel","Cantoni",04/10/1906,"Uruguayan","http://en.wikipedia.org/wiki/Eitel_Cantoni"),
 (749,"aston",null,"null","Bill","Aston",29/03/1900,"British","http://en.wikipedia.org/wiki/Bill_Aston"),
-(750,"brudes",null,"null","Adolf","Brudes",1899-10-15,"German","http://en.wikipedia.org/wiki/Adolf_Brudes"),
+(750,"brudes",null,"null","Adolf","Brudes",15/10/1899,"German","http://en.wikipedia.org/wiki/Adolf_Brudes"),
 (751,"riess",null,"null","Fritz","Riess",11/07/1922,"German","http://en.wikipedia.org/wiki/Fritz_Riess"),
 (752,"niedermayr",null,"null","Helmut","Niedermayr",29/11/1915,"German","http://en.wikipedia.org/wiki/Helmut_Niedermayr"),
 (753,"klenk",null,"null","Hans","Klenk",28/10/1919,"German","http://en.wikipedia.org/wiki/Hans_Klenk"),
