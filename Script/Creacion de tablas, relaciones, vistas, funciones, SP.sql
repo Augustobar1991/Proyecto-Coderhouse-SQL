@@ -202,21 +202,9 @@ ALTER TABLE sprint_results
   
 -- CREACION DE VISTAS
   
-CREATE OR REPLACE VIEW `datos_del_piloto` AS  -- usan tablas driver/qualifying/constructos
-select  
-		d.driverId, 
-		full_name(d.driverId) as Nombre_Piloto,
-        d.nationality as Nacionalidad,
-		d.`code` as Codigo,  
-		d.dob as Fecha_Nacimiento,
-        q.constructorId,
-        c.`name` as Nombre_Escuderia,
-        c.nationality as Nacionalidad_Escuderia
-from driver d
-left join qualifying q on q.driverId=d.driverId
-left join constructors c on c.constructorId=q.constructorId
-group by driverId;
-
+-- CREATE OR REPLACE VIEW `datos_del_piloto` AS  -- esta agregada en el Stored Procedure `sp_add_year_old`
+call f1.sp_add_year_old(0); -- si es 0 dropea la columna age de la tabla driver y no se ve en la vista datos_del_piloto
+call f1.sp_add_year_old(1); -- si es 1 agrega la columna age de la tabla driver y se ve en la vista datos_del_piloto
 select * from datos_del_piloto;
 
 CREATE OR REPLACE VIEW `estadistica_del_piloto_escuderia` AS  -- usan tablas driver/qualifying/constructos/constructor_standings/races
@@ -346,10 +334,94 @@ BEGIN
     RETURN suma_victorias;
 END$$
 DELIMITER ;  
-  
-  
-
+ 
+ 
 
 -- CREACION DE Store Procedure
 
-  
+-- agrega la columna age (edad) en la tabla driver, luego ejecuta un SP (sp_add_allrows) para actualizar el campo age y por ultimo crea la vista (datos_del_piloto) con o sin el campo age 
+DELIMITER $$
+DROP PROCEDURE IF EXISTS `sp_add_year_old`$$
+CREATE PROCEDURE `sp_add_year_old` (IN addage bool)
+READS SQL DATA
+BEGIN    
+    IF (addage=1) THEN
+		ALTER TABLE driver ADD COLUMN age int AFTER dob;
+		call f1.sp_add_allrows();
+		CREATE OR REPLACE VIEW `datos_del_piloto` AS  -- usan tablas driver/qualifying/constructos 
+			select  
+				d.driverId, 
+				full_name(d.driverId) as Nombre_Piloto,
+				d.nationality as Nacionalidad,
+				d.`code` as Codigo,  
+				d.dob as Fecha_Nacimiento,
+				d.age as Edad,
+				q.constructorId,
+				c.`name` as Nombre_Escuderia,
+				c.nationality as Nacionalidad_Escuderia
+			from driver d
+			left join qualifying q on q.driverId=d.driverId
+			left join constructors c on c.constructorId=q.constructorId
+			group by driverId;
+	ELSEIF (addage=0) THEN
+		ALTER TABLE driver DROP COLUMN age;
+		CREATE OR REPLACE VIEW `datos_del_piloto` AS  -- usan tablas driver/qualifying/constructos
+			select  
+				d.driverId, 
+				full_name(d.driverId) as Nombre_Piloto,
+				d.nationality as Nacionalidad,
+				d.`code` as Codigo,  
+				d.dob as Fecha_Nacimiento,
+				q.constructorId,
+				c.`name` as Nombre_Escuderia,
+				c.nationality as Nacionalidad_Escuderia
+			from driver d
+			left join qualifying q on q.driverId=d.driverId
+			left join constructors c on c.constructorId=q.constructorId
+			group by driverId; 
+	end if;
+END$$
+DELIMITER ;
+
+call f1.sp_add_year_old(0); -- si es 0 dropea la columna age de la tabla driver y no se ve en la vista datos_del_piloto
+call f1.sp_add_year_old(1); -- si es 1 agrega la columna age de la tabla driver y se ve en la vista datos_del_piloto
+select * from datos_del_piloto;
+
+-- updatea la columna age (edad) de la tabla driver con un loop while
+-- que hace un call de la Stored Procedure anterior haciendo que muestre la edad de cada piloto de la columna age 
+DELIMITER $$
+DROP PROCEDURE IF EXISTS `sp_add_allrows`$$
+CREATE PROCEDURE `sp_add_allrows` ()
+READS SQL DATA
+BEGIN    
+    DECLARE lastRows INT DEFAULT 0;
+    DECLARE startRows INT DEFAULT 0;
+    SELECT COUNT(*) FROM driver INTO lastRows;
+    SET startRows=1;
+    WHILE startRows <lastRows DO
+	UPDATE driver SET age = TIMESTAMPDIFF(YEAR, dob , CURDATE()) where driverId = startRows ;
+    	SET startRows= startRows+1;
+    END WHILE;
+END$$
+DELIMITER ;
+
+-- Muestra en 3 columnas año, constructor y posicion del campeonato de constructores
+-- Se debe elegir que constructor se quiere ver, de los cuales son 214
+DELIMITER $$
+DROP PROCEDURE IF EXISTS `sp_constructor_result_by_year`$$
+CREATE PROCEDURE `sp_constructor_result_by_year` (IN constructor int)
+READS SQL DATA
+BEGIN
+select last_race.year as Año, constructors.name as Constructor, position as Posicion from constructor_standings
+	join (select year, raceId from races
+			where year between 1950 and 2022
+			group by year
+			having max(round)) as last_race
+			on constructor_standings.raceId = last_race.raceId
+	join constructors on constructors.constructorId = constructor_standings.constructorId
+where constructors.constructorId = constructor
+order by last_race.year;
+END$$
+DELIMITER ;
+
+call f1.sp_constructor_result_by_year(1); -- 1=Mclaren, 2=BMW Sauber, 3=Williams, 4=Renault, 5=Toro Rosso, 6=Ferrari, 7=Toyota, 8=Super Aguri, 9=Red Bull, 10=Force india, ...
