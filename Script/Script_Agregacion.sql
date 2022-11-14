@@ -339,7 +339,9 @@ DELIMITER ;
 
 -- CREACION DE Store Procedure
 
--- agrega la columna age (edad) en la tabla driver, luego ejecuta un SP (sp_add_allrows) para actualizar el campo age y por ultimo crea la vista (datos_del_piloto) con o sin el campo age 
+-- agrega la columna age (edad) en la tabla driver, luego ejecuta un SP (sp_add_allrows) para actualizar el campo age 
+-- por ultimo crea la vista (datos_del_piloto) con o sin el campo age dependiendo que se desea eligir 
+-- esto se que no se debe hacer, pero es para fines didacticos
 DELIMITER $$
 DROP PROCEDURE IF EXISTS `sp_add_year_old`$$
 CREATE PROCEDURE `sp_add_year_old` (IN addage bool)
