@@ -1,7 +1,6 @@
 -- Creamos la base de datos F1
 CREATE SCHEMA IF NOT EXISTS F1;
 USE F1;
-
 -- Crea Tabla circuits
 CREATE TABLE IF NOT EXISTS circuits(
   circuitId INT NOT NULL,
@@ -147,8 +146,6 @@ CREATE TABLE IF NOT EXISTS sprint_results(
 );
 
 
-
-
 -- CREAR RELACIONES FK 
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -201,12 +198,10 @@ ALTER TABLE sprint_results
 
   
 -- CREACION DE VISTAS
-  
--- CREATE OR REPLACE VIEW `datos_del_piloto` AS  -- esta agregada en el Stored Procedure `sp_add_year_old`
-call f1.sp_add_year_old(0); -- si es 0 dropea la columna age de la tabla driver y no se ve en la vista datos_del_piloto
-call f1.sp_add_year_old(1); -- si es 1 agrega la columna age de la tabla driver y se ve en la vista datos_del_piloto
-select * from datos_del_piloto;
 
+-- creacion de la vista de las estadisticas de los pilotos en cada escuderia que devulve el id del piloto, carrera, constructor y qualify, 
+-- fecha y nombre del circuito corrido, apellido del piloto, nombre y nacionalidad de la escuderia, numero del piloto, posicion puntos y qualify 
+-- usan las tablas driver/races/lap_times
 CREATE OR REPLACE VIEW `estadistica_del_piloto_escuderia` AS  -- usan tablas driver/qualifying/constructos/constructor_standings/races
 select  d.driverId, 
 		q.raceId,
@@ -231,7 +226,9 @@ left join races r on r.raceId=q.raceId
 group by q.raceId;
 select * from estadistica_del_piloto_escuderia;
 
-CREATE OR REPLACE VIEW `resultados_por_carrera_del_piloto` AS  -- usan tablas driver/races/lap_times
+-- creacion de la vista de los resultados por cada carrera del piloto que devulve el id del piloto y de la carrera, apellido, fecha, nombre del circuito, vuelta, las posiciones y y tiempo de vuelta 
+-- usan las tablas driver/races/lap_times
+CREATE OR REPLACE VIEW `resultados_por_carrera_del_piloto` AS
 select  d.driverId, 
 		l.raceId,
 		d.surname as Apellido, 
@@ -247,7 +244,9 @@ group by  raceId;
 
 select * from resultados_por_carrera_del_piloto;
 
-CREATE OR REPLACE VIEW `mejores_resultados_del_piloto` AS  -- usan tablas driver/result
+-- creacion de la vista que devulve el id, apellido, grilla, posicion, puntos, vuelta, tiempo mejor vuelta, ranking, tiempo de la mejor vuelta y la velocidad maxima por vuelta de los pilotos
+-- usan las tablas driver/result
+CREATE OR REPLACE VIEW `mejores_resultados_del_piloto` AS 
 select    d.driverId, 
 		  d.surname as Apellido, 
 		  r.grid as Grilla,
@@ -264,7 +263,9 @@ left join results r on r.driverId=d.driverId;
 
 select * from mejores_resultados_del_piloto;
 
-CREATE OR REPLACE VIEW `temporada` AS  -- usan tablas circuits/races
+-- creacion de la vista que devulve el id, año, fecha, hora, locacion, pais y datos de tiempos de las carreras
+-- usan las tablas circuits/races
+CREATE OR REPLACE VIEW `temporada` AS
 select    r.raceId,
 		  r.`year` as Año,
 		  r.`name` as Nombre_circuito,
@@ -288,7 +289,9 @@ order by r.`year` DESC;
 
 select * from temporada;
 
-CREATE OR REPLACE VIEW `estadistica_escuderia` AS  -- usan tablas constructor_standings/constructors
+-- creacion de la vista que devulve el id, nombre, nacionalidad, suma de puntos y la cantidad de veces que fueron ganadores los constructores/escuderias
+-- usan las tablas constructor_standings/constructors
+CREATE OR REPLACE VIEW `estadistica_escuderia` AS  
 SELECT  c.constructorId,
         c.name as Nombre_escuderia,
         c.nationality as Nacionalidad,
@@ -302,7 +305,6 @@ order by c.constructorId;
 select * from estadistica_escuderia;  
   
   
-
 
 -- CREACION DE FUNCIONES
 
@@ -337,7 +339,7 @@ DELIMITER ;
  
  
 
--- CREACION DE Store Procedure
+-- CREACION DE STORED PROCEDURE
 
 -- agrega la columna age (edad) en la tabla driver, luego ejecuta un SP (sp_add_allrows) para actualizar el campo age 
 -- por ultimo crea la vista (datos_del_piloto) con o sin el campo age dependiendo que se desea eligir 
@@ -350,7 +352,7 @@ BEGIN
     IF (addage=1) THEN
 		ALTER TABLE driver ADD COLUMN age int AFTER dob;
 		call f1.sp_add_allrows();
-		CREATE OR REPLACE VIEW `datos_del_piloto` AS  -- usan tablas driver/qualifying/constructos 
+		CREATE OR REPLACE VIEW `datos_del_piloto` AS 
 			select  
 				d.driverId, 
 				full_name(d.driverId) as Nombre_Piloto,
@@ -367,7 +369,7 @@ BEGIN
 			group by driverId;
 	ELSEIF (addage=0) THEN
 		ALTER TABLE driver DROP COLUMN age;
-		CREATE OR REPLACE VIEW `datos_del_piloto` AS  -- usan tablas driver/qualifying/constructos
+		CREATE OR REPLACE VIEW `datos_del_piloto` AS
 			select  
 				d.driverId, 
 				full_name(d.driverId) as Nombre_Piloto,
@@ -388,6 +390,7 @@ DELIMITER ;
 call f1.sp_add_year_old(0); -- si es 0 dropea la columna age de la tabla driver y no se ve en la vista datos_del_piloto
 call f1.sp_add_year_old(1); -- si es 1 agrega la columna age de la tabla driver y se ve en la vista datos_del_piloto
 select * from datos_del_piloto;
+SELECT * FROM driver.new_driver;
 
 -- updatea la columna age (edad) de la tabla driver con un loop while
 -- que hace un call de la Stored Procedure anterior haciendo que muestre la edad de cada piloto de la columna age 
@@ -427,3 +430,72 @@ END$$
 DELIMITER ;
 
 call f1.sp_constructor_result_by_year(1); -- 1=Mclaren, 2=BMW Sauber, 3=Williams, 4=Renault, 5=Toro Rosso, 6=Ferrari, 7=Toyota, 8=Super Aguri, 9=Red Bull, 10=Force india, ...
+
+
+
+-- CREACION DE TRIGGER
+
+-- TRIGGER (1)
+-- se crea el trigger tr_add_user_at_driver que disparara cuando los datos son insertados en la tabla driver y los guarda en una tabla driver_new
+-- DROP TRIGGER `tr_add_user_at_driver`;
+
+CREATE TRIGGER `tr_add_user_at_driver`
+AFTER INSERT ON `driver`
+FOR EACH ROW
+INSERT INTO `driver_new`
+VALUES (id,NEW.driverId, NEW.forename, NEW.surname, DATABASE(), 'Insert into', 'AFTER' ,USER(), SESSION_USER(), CURRENT_TIMESTAMP);
+
+-- se crea la nueva tabla new_driver que albergara los datos del trigger
+CREATE TABLE IF NOT EXISTS `driver_new`
+( 
+	id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+	driverId INT, 
+	forename VARCHAR(50),
+    surname VARCHAR(50),
+    data_base VARCHAR(50),
+    event VARCHAR(30),
+    timing VARCHAR(10),
+    user VARCHAR(50),
+    session_user VARCHAR(50),
+    fecha_hora VARCHAR(50)
+);
+
+-- para testear se agregan filas
+INSERT INTO driver VALUES
+(856, 'hamilton', 44, 'HAM', 'Lewis', 'Hamilton', '1985-01-07', 37, 'British', 'http://en.wikipedia.org/wiki/Lewis_Hamilton')
+,(857, 'heidfeld', 'NULL', 'HEI', 'Nick', 'Heidfeld', '1977-05-10', 45, 'German', 'http://en.wikipedia.org/wiki/Nick_Heidfeld');
+-- se verifica que se encuentre funcionando el trigger
+SELECT * FROM driver;
+SELECT * FROM driver_new;
+
+-- TRIGGER (2)
+-- se crea el trigger tr_delete_user_at_driver que disparara cuando los datos son eliminados de la tabla driver y los guarda en una tabla driver_new
+-- DROP TRIGGER `tr_delete_user_at_driver`;
+
+CREATE TRIGGER `tr_delete_user_at_driver`
+BEFORE DELETE ON `driver`
+FOR EACH ROW
+INSERT INTO `driver_new`
+VALUES (id, old.driverId, old.forename, old.surname, DATABASE(), 'Delete', 'BEFORE' ,USER(), SESSION_USER(), CURRENT_TIMESTAMP);
+
+-- para testear se borran filas
+DELETE FROM driver WHERE driverId BETWEEN 856 and 857;
+-- se verifica que se encuentre funcionando el trigger
+SELECT * FROM driver;
+SELECT * FROM driver_new;
+
+-- TRIGGER (3)
+-- se crea el trigger tr_update_user_at_driver que disparara cuando se hace un update de los datos de la tabla driver y los guarda en una tabla driver_new
+-- DROP TRIGGER `tr_update_user_at_driver`;
+
+CREATE TRIGGER `tr_update_user_at_driver`
+AFTER UPDATE ON `driver`
+FOR EACH ROW
+INSERT INTO `driver_new`
+VALUES (id, old.driverId, old.forename, old.surname, DATABASE(), 'Update', 'AFTER' ,USER(), SESSION_USER(), CURRENT_TIMESTAMP);
+
+-- para testear se hace un update de un valor
+UPDATE driver SET dob = ("1985-01-07") where driverId = 1;
+-- se verifica que se encuentre funcionando el trigger
+SELECT * FROM driver;
+SELECT * FROM driver_new;
