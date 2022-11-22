@@ -24,7 +24,6 @@ CREATE TABLE IF NOT EXISTS constructor_standings (
   position INT,
   positionText VARCHAR(50),
   wins INT,
-  constructor_standingscol VARCHAR(45),
   PRIMARY KEY (constructorStandingsId, constructorId)
 );
 
