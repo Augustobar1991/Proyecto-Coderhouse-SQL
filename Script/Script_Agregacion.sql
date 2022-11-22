@@ -4,14 +4,14 @@ USE F1;
 -- Crea Tabla circuits
 CREATE TABLE IF NOT EXISTS circuits(
   circuitId INT NOT NULL,
-  circuitRef VARCHAR(45) NOT NULL,
-  `name` VARCHAR(45) NOT NULL,
-  location VARCHAR(45) NOT NULL,
-  country VARCHAR(45) NOT NULL,
-  lat INT NULL,
-  lng INT NULL,
-  alt INT NULL,
-  url TEXT(45) NULL,
+  circuitRef VARCHAR(45),
+  `name` VARCHAR(45) ,
+  location VARCHAR(45),
+  country VARCHAR(45),
+  lat INT,
+  lng INT,
+  alt INT,
+  url TEXT(45),
   PRIMARY KEY (CircuitId)
 );
 
@@ -20,11 +20,11 @@ CREATE TABLE IF NOT EXISTS constructor_standings (
   constructorStandingsId INT NOT NULL,
   raceId INT NOT NULL,
   constructorId INT NOT NULL,
-  points INT NULL,
-  position INT NULL,
-  positionText INT NULL,
-  wins INT NULL,
-  constructor_standingscol VARCHAR(45) NULL,
+  points INT,
+  position INT,
+  positionText VARCHAR(50),
+  wins INT,
+  constructor_standingscol VARCHAR(45),
   PRIMARY KEY (constructorStandingsId, constructorId)
 );
 
@@ -81,10 +81,10 @@ CREATE TABLE IF NOT EXISTS qualifying (
 -- Crea Tabla races
 CREATE TABLE IF NOT EXISTS races(
   raceId INT NOT NULL,
-  `year` INT NOT NULL,
+  `year` INT NULL,
   round INT NULL,
   circuitId INT NOT NULL,
-  `name` VARCHAR(45) NOT NULL,
+  `name` VARCHAR(45) NULL,
   `date` DATE NULL,
   `time` TIME NULL,
   url VARCHAR(255) NULL,
@@ -107,14 +107,14 @@ CREATE TABLE IF NOT EXISTS results(
   raceId INT NOT NULL,
   driverId INT NOT NULL,
   constructorId INT NOT NULL,
-  `number` INT NOT NULL,
+  `number` INT NULL,
   grid INT NULL,
   position INT NULL,
   positionText VARCHAR(45) NULL,
   positionOrder INT NULL,
   points INT NULL,
   laps INT NULL,
-  `time` TIME NULL,
+  `time` VARCHAR(45) NULL,
   milliseconds INT NULL,
   fastestLap INT NULL,
   `rank` INT NULL,
@@ -291,7 +291,8 @@ select * from temporada;
 
 -- creacion de la vista que devulve el id, nombre, nacionalidad, suma de puntos y la cantidad de veces que fueron ganadores los constructores/escuderias
 -- usan las tablas constructor_standings/constructors
-CREATE OR REPLACE VIEW `estadistica_escuderia` AS  
+-- Se crea luego de la funcion 'constructor_wins'
+/*CREATE OR REPLACE VIEW `estadistica_escuderia` AS  
 SELECT  c.constructorId,
         c.name as Nombre_escuderia,
         c.nationality as Nacionalidad,
@@ -302,7 +303,7 @@ left join constructors c on cs.constructorId = c.constructorId
 group by c.constructorId
 order by c.constructorId;
 
-select * from estadistica_escuderia;  
+select * from estadistica_escuderia;  */
   
   
 
@@ -337,9 +338,39 @@ BEGIN
 END$$
 DELIMITER ;  
  
- 
+-- creacion de la vista que devulve el id, nombre, nacionalidad, suma de puntos y la cantidad de veces que fueron ganadores los constructores/escuderias
+-- usan las tablas constructor_standings/constructors 
+CREATE OR REPLACE VIEW `estadistica_escuderia` AS  
+SELECT  c.constructorId,
+        c.name as Nombre_escuderia,
+        c.nationality as Nacionalidad,
+        sum(cs.points) as Suma_de_puntos,
+        constructor_wins(c.constructorId) as Cantidad_veces_ganadores
+FROM constructor_standings cs
+left join constructors c on cs.constructorId = c.constructorId
+group by c.constructorId
+order by c.constructorId;
+
+select * from estadistica_escuderia;  
 
 -- CREACION DE STORED PROCEDURE
+-- updatea la columna age (edad) de la tabla driver con un loop while
+-- que hace un call de la Stored Procedure anterior haciendo que muestre la edad de cada piloto de la columna age 
+DELIMITER $$
+DROP PROCEDURE IF EXISTS `sp_add_allrows`$$
+CREATE PROCEDURE `sp_add_allrows` ()
+READS SQL DATA
+BEGIN    
+    DECLARE lastRows INT DEFAULT 0;
+    DECLARE startRows INT DEFAULT 0;
+    SELECT COUNT(*) FROM driver INTO lastRows;
+    SET startRows=1;
+    WHILE startRows <lastRows DO
+	UPDATE driver SET age = TIMESTAMPDIFF(YEAR, dob , CURDATE()) where driverId = startRows ;
+    	SET startRows= startRows+1;
+    END WHILE;
+END$$
+DELIMITER ;
 
 -- agrega la columna age (edad) en la tabla driver, luego ejecuta un SP (sp_add_allrows) para actualizar el campo age 
 -- por ultimo crea la vista (datos_del_piloto) con o sin el campo age dependiendo que se desea eligir 
@@ -387,28 +418,12 @@ BEGIN
 END$$
 DELIMITER ;
 
-call f1.sp_add_year_old(0); -- si es 0 dropea la columna age de la tabla driver y no se ve en la vista datos_del_piloto
+-- call f1.sp_add_year_old(0); -- si es 0 dropea la columna age de la tabla driver y no se ve en la vista datos_del_piloto
 call f1.sp_add_year_old(1); -- si es 1 agrega la columna age de la tabla driver y se ve en la vista datos_del_piloto
 select * from datos_del_piloto;
-SELECT * FROM driver.new_driver;
+-- SELECT * FROM driver.new_driver;
 
--- updatea la columna age (edad) de la tabla driver con un loop while
--- que hace un call de la Stored Procedure anterior haciendo que muestre la edad de cada piloto de la columna age 
-DELIMITER $$
-DROP PROCEDURE IF EXISTS `sp_add_allrows`$$
-CREATE PROCEDURE `sp_add_allrows` ()
-READS SQL DATA
-BEGIN    
-    DECLARE lastRows INT DEFAULT 0;
-    DECLARE startRows INT DEFAULT 0;
-    SELECT COUNT(*) FROM driver INTO lastRows;
-    SET startRows=1;
-    WHILE startRows <lastRows DO
-	UPDATE driver SET age = TIMESTAMPDIFF(YEAR, dob , CURDATE()) where driverId = startRows ;
-    	SET startRows= startRows+1;
-    END WHILE;
-END$$
-DELIMITER ;
+
 
 -- Muestra en 3 columnas año, constructor y posicion del campeonato de constructores
 -- Se debe elegir que constructor se quiere ver, de los cuales son 214
@@ -469,6 +484,22 @@ SELECT * FROM driver;
 SELECT * FROM driver_new;
 
 -- TRIGGER (2)
+-- se crea el trigger tr_update_user_at_driver que disparara cuando se hace un update de los datos de la tabla driver y los guarda en una tabla driver_new
+-- DROP TRIGGER `tr_update_user_at_driver`;
+
+CREATE TRIGGER `tr_update_user_at_driver`
+AFTER UPDATE ON `driver`
+FOR EACH ROW
+INSERT INTO `driver_new`
+VALUES (id, old.driverId, old.forename, old.surname, DATABASE(), 'Update', 'AFTER' ,USER(), SESSION_USER(), CURRENT_TIMESTAMP);
+
+-- para testear se hace un update de un valor
+UPDATE driver SET dob = ("1985-01-07") where driverId = 856;
+-- se verifica que se encuentre funcionando el trigger
+SELECT * FROM driver;
+SELECT * FROM driver_new;
+
+-- TRIGGER (3)
 -- se crea el trigger tr_delete_user_at_driver que disparara cuando los datos son eliminados de la tabla driver y los guarda en una tabla driver_new
 -- DROP TRIGGER `tr_delete_user_at_driver`;
 
@@ -484,18 +515,18 @@ DELETE FROM driver WHERE driverId BETWEEN 856 and 857;
 SELECT * FROM driver;
 SELECT * FROM driver_new;
 
--- TRIGGER (3)
--- se crea el trigger tr_update_user_at_driver que disparara cuando se hace un update de los datos de la tabla driver y los guarda en una tabla driver_new
--- DROP TRIGGER `tr_update_user_at_driver`;
 
-CREATE TRIGGER `tr_update_user_at_driver`
-AFTER UPDATE ON `driver`
-FOR EACH ROW
-INSERT INTO `driver_new`
-VALUES (id, old.driverId, old.forename, old.surname, DATABASE(), 'Update', 'AFTER' ,USER(), SESSION_USER(), CURRENT_TIMESTAMP);
 
--- para testear se hace un update de un valor
-UPDATE driver SET dob = ("1985-01-07") where driverId = 1;
--- se verifica que se encuentre funcionando el trigger
-SELECT * FROM driver;
-SELECT * FROM driver_new;
+-- CREACION DE USER
+CREATE ROLE 'app_read', 'app_write';
+GRANT SELECT ON f1.* TO 'app_read';
+GRANT UPDATE,INSERT,ALTER  ON f1.* TO 'app_write';
+-- usuario con permisos de sólo lectura sobre todas las tablas, sin poder eliminar registros de ninguna tabla.
+CREATE USER 'user1read'@'localhost' IDENTIFIED BY 'coder123';
+
+-- usuario con permisos de Lectura, Inserción y Modificación de datos, sin poder eliminar registros de ninguna tabla.
+CREATE USER 'user2rw'@'localhost' IDENTIFIED BY 'coder123';
+
+GRANT 'app_write' TO 'user2rw'@'localhost';
+GRANT 'app_read' TO 'user1read'@'localhost', 'user2rw'@'localhost';
+SET DEFAULT ROLE ALL TO 'user1read'@'localhost', 'user2rw'@'localhost';
