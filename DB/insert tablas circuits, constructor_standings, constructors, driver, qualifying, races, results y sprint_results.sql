@@ -1,3 +1,7 @@
+USE F1;
+SET AUTOCOMMIT = 0;
+START TRANSACTION;
+
 INSERT INTO circuits 
 VALUE (1,"albert_park","Albert Park Grand Prix Circuit","Melbourne","Australia",-37.8497,144.968,10,"http://en.wikipedia.org/wiki/Melbourne_Grand_Prix_Circuit"),
 (2,"sepang","Sepang International Circuit","Kuala Lumpur","Malaysia",2.76083,101.738,18,"http://en.wikipedia.org/wiki/Sepang_International_Circuit"),
@@ -78,6 +82,8 @@ VALUE (1,"albert_park","Albert Park Grand Prix Circuit","Melbourne","Australia",
 (77,"jeddah","Jeddah Corniche Circuit","Jeddah","Saudi Arabia",21.6319,39.1044,15,"http://en.wikipedia.org/wiki/Jeddah_Street_Circuit"),
 (78,"losail","Losail International Circuit","Al Daayen","Qatar",25.49,51.4542,Null,"http://en.wikipedia.org/wiki/Losail_International_Circuit"),
 (79,"miami","Miami International Autodrome","Miami","USA",25.9581,-80.2389,Null,"http://en.wikipedia.org/wiki/Miami_International_Autodrome");
+
+SAVEPOINT c1;
 
 INSERT INTO constructor_standings(constructorStandingsId, raceId, constructorId, points, position, positionText, wins) VALUES(1, 18, 1, 14, 1, 1, 1)
 ,(2, 18, 2, 8, 3, 3, 0)
@@ -12921,6 +12927,8 @@ INSERT INTO constructor_standings(constructorStandingsId, raceId, constructorId,
 ,(28271, 1086, 1, 95, 5, 5, 0)
 ,(28272, 1086, 9, 431, 1, 1, 9);
 
+SAVEPOINT c2;
+
 INSERT INTO constructors(constructorId, constructorRef, name, nationality, url) VALUES(1, 'mclaren', 'McLaren', 'British', 'http://en.wikipedia.org/wiki/McLaren')
 ,(2, 'bmw_sauber', 'BMW Sauber', 'German', 'http://en.wikipedia.org/wiki/BMW_Sauber')
 ,(3, 'williams', 'Williams', 'British', 'http://en.wikipedia.org/wiki/Williams_Grand_Prix_Engineering')
@@ -13133,6 +13141,8 @@ INSERT INTO constructors(constructorId, constructorRef, name, nationality, url) 
 ,(212, NULL, NULL, NULL, NULL)
 ,(213, 'alphatauri', 'AlphaTauri', 'Italian', 'http://en.wikipedia.org/wiki/Scuderia_AlphaTauri')
 ,(214, 'alpine', 'Alpine F1 Team', 'French', 'http://en.wikipedia.org/wiki/Alpine_F1_Team');
+
+SAVEPOINT c3;
 
 INSERT INTO driver(driverId, driverRef, number, code, forename, surname, dob, nationality, url) VALUES
 (1, 'hamilton', 44, 'HAM', 'Lewis', 'Hamilton', '1985-01-07', 'British', 'http://en.wikipedia.org/wiki/Lewis_Hamilton')
@@ -13990,6 +14000,8 @@ INSERT INTO driver(driverId, driverRef, number, code, forename, surname, dob, na
 ,(853, 'mazepin', 9, 'MAZ', 'Nikita', 'Mazepin', '1999-03-02', 'Russian', 'http://en.wikipedia.org/wiki/Nikita_Mazepin')
 ,(854, 'mick_schumacher', 47, 'MSC', 'Mick', 'Schumacher', '1999-03-22', 'German', 'http://en.wikipedia.org/wiki/Mick_Schumacher')
 ,(855, 'zhou', 24, 'ZHO', 'Guanyu', 'Zhou', '1999-05-30', 'Chinese', 'http://en.wikipedia.org/wiki/Guanyu_Zhou');
+
+SAVEPOINT c4;
 
 insert into qualifying value
 (1,18,1,1,22,1,"1:26.572","1:25.187","1:26.714"),
@@ -23388,6 +23400,7 @@ insert into qualifying value
 (9451,1086,842,213,10,19,"1:19.527",NULL,NULL),
 (9452,1086,849,3,6,20,"1:19.570",NULL,NULL);
 
+SAVEPOINT c5;
 
 INSERT INTO races(raceId, year, round, circuitId, name, date, time, url, fp1_date, fp1_time, fp2_date, fp2_time, fp3_date, fp3_time, quali_date, quali_time, sprint_date, sprint_time) VALUES(1, 2009, 1, 1, 'Australian Grand Prix', '2009-03-29', '06:00:00', 'http://en.wikipedia.org/wiki/2009_Australian_Grand_Prix', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
 ,(2, 2009, 2, 2, 'Malaysian Grand Prix', '2009-04-05', '09:00:00', 'http://en.wikipedia.org/wiki/2009_Malaysian_Grand_Prix', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
@@ -24468,6 +24481,8 @@ INSERT INTO races(raceId, year, round, circuitId, name, date, time, url, fp1_dat
 ,(1094, 2022, 20, 32, 'Mexico City Grand Prix', '2022-10-30', '20:00:00', 'http://en.wikipedia.org/wiki/2022_Mexican_Grand_Prix', '2022-10-28', '18:00:00', '2022-10-28', '21:00:00', '2022-10-29', '17:00:00', '2022-10-29', '20:00:00', NULL, NULL)
 ,(1095, 2022, 21, 18, 'Brazilian Grand Prix', '2022-11-13', '18:00:00', 'http://en.wikipedia.org/wiki/2022_Brazilian_Grand_Prix', '2022-11-11', '15:30:00', '2022-11-12', '15:30:00', NULL, NULL, '2022-11-11', '19:00:00', '2022-11-12', '19:30:00')
 ,(1096, 2022, 22, 24, 'Abu Dhabi Grand Prix', '2022-11-20', '13:00:00', 'http://en.wikipedia.org/wiki/2022_Abu_Dhabi_Grand_Prix', '2022-11-18', '09:00:00', '2022-11-18', '12:00:00', '2022-11-19', '10:00:00', '2022-11-19', '13:00:00', NULL, NULL);
+
+SAVEPOINT c6;
 
 INSERT INTO results VALUES
 (1, 18, 1, 1, 22, 1, 1, 1, 1, 10, 58, '1:34:50.616', 5690616, 39, 2, '1:27.452', 218.300, 1)
@@ -50131,6 +50146,8 @@ INSERT INTO results VALUES
 ,(25664, 1086, 852, 213, 22, 16, 19, 19, 19, 0, 68, NULL, NULL, 58, 16, '1:23.538', 188.795, 12)
 ,(25665, 1086, 822, 51, 77, 8, 20, 20, 20, 0, 65, NULL, NULL, 60, 19, '1:24.002', 187.752, 131);
 
+SAVEPOINT c7;
+
 INSERT INTO sprint_results(resultId, raceId, driverId, constructorId, number, grid, position, positionText, positionOrder, points, laps, time, milliseconds, fastestLap, fastestLapTime, statusId) VALUES(1, 1061, 830, 9, 33, 2, 1, 1, 1, 3, 17, '25:38.426', 1538426, 14, '1:30.013', 1)
 ,(2, 1061, 1, 131, 44, 1, 2, 2, 2, 2, 17, 1.430, 1539856, 17, '1:29.937', 1)
 ,(3, 1061, 822, 131, 77, 3, 3, 3, 3, 1, 17, 7.502, 1545928, 17, '1:29.958', 1)
@@ -50231,3 +50248,7 @@ INSERT INTO sprint_results(resultId, raceId, driverId, constructorId, number, gr
 ,(98, 1084, 849, 3, 6, 19, 18, 18, 18, 0, 23, '1:08.694', 1658753, 4, '1:10.284', 1)
 ,(99, 1084, 20, 117, 5, 20, 19, 19, 19, 0, 21, NULL, NULL, 4, '1:10.317', 130)
 ,(100, 1084, 4, 214, 14, 8, NULL, 'N', 20, 0, 0, NULL, NULL, NULL, NULL, 10);
+SAVEPOINT c8;
+RELEASE SAVEPOINT c1;
+COMMIT;
+SET AUTOCOMMIT = 1;

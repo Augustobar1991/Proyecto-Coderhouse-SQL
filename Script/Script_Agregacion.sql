@@ -360,14 +360,23 @@ DROP PROCEDURE IF EXISTS `sp_add_allrows`$$
 CREATE PROCEDURE `sp_add_allrows` ()
 READS SQL DATA
 BEGIN    
+	DECLARE maxerror VARCHAR(100) DEFAULT NULL;
     DECLARE lastRows INT DEFAULT 0;
     DECLARE startRows INT DEFAULT 0;
-    SELECT COUNT(*) FROM driver INTO lastRows;
-    SET startRows=1;
-    WHILE startRows <lastRows DO
-	UPDATE driver SET age = TIMESTAMPDIFF(YEAR, dob , CURDATE()) where driverId = startRows ;
-    	SET startRows= startRows+1;
-    END WHILE;
+	
+    IF  (SELECT COUNT(*) FROM driver)>1 then
+		SELECT COUNT(*) FROM driver INTO lastRows;
+		SET startRows=1;
+		WHILE startRows <lastRows DO
+		UPDATE driver SET age = TIMESTAMPDIFF(YEAR, dob , CURDATE()) where driverId = startRows ;
+			SET startRows= startRows+1;
+		END WHILE;
+        COMMIT;
+    ELSE 
+		SET maxerror = 'Error no contiene datos cargados en la tabla driver';
+		ROLLBACK;
+        SELECT maxerror AS 'Error';
+    END IF;
 END$$
 DELIMITER ;
 
@@ -379,9 +388,14 @@ DROP PROCEDURE IF EXISTS `sp_add_year_old`$$
 CREATE PROCEDURE `sp_add_year_old` (IN addage bool)
 READS SQL DATA
 BEGIN    
+	DECLARE maxerror VARCHAR(100) DEFAULT NULL;
+    IF (addage>1) THEN
+			SET maxerror = 'Error solo puede seleccionar 0 (drop column age) o 1 (add column age)';
+        END IF;
     IF (addage=1) THEN
 		ALTER TABLE driver ADD COLUMN age int AFTER dob;
 		call f1.sp_add_allrows();
+        COMMIT;
 		CREATE OR REPLACE VIEW `datos_del_piloto` AS 
 			select  
 				d.driverId, 
@@ -413,15 +427,19 @@ BEGIN
 			left join qualifying q on q.driverId=d.driverId
 			left join constructors c on c.constructorId=q.constructorId
 			group by driverId; 
+            COMMIT;
+    ELSEIF (addage>1) THEN
+		ROLLBACK;
+        SELECT maxerror AS 'Error';
 	end if;
 END$$
 DELIMITER ;
 
 -- call f1.sp_add_year_old(0); -- si es 0 dropea la columna age de la tabla driver y no se ve en la vista datos_del_piloto
 call f1.sp_add_year_old(1); -- si es 1 agrega la columna age de la tabla driver y se ve en la vista datos_del_piloto
+-- call f1.sp_add_year_old(2); -- marca error
 select * from datos_del_piloto;
 -- SELECT * FROM driver.new_driver;
-
 
 
 -- Muestra en 3 columnas año, constructor y posicion del campeonato de constructores
@@ -452,7 +470,6 @@ call f1.sp_constructor_result_by_year(1); -- 1=Mclaren, 2=BMW Sauber, 3=Williams
 -- TRIGGER (1)
 -- se crea el trigger tr_add_user_at_driver que disparara cuando los datos son insertados en la tabla driver y los guarda en una tabla driver_new
 -- DROP TRIGGER `tr_add_user_at_driver`;
-
 CREATE TRIGGER `tr_add_user_at_driver`
 AFTER INSERT ON `driver`
 FOR EACH ROW
