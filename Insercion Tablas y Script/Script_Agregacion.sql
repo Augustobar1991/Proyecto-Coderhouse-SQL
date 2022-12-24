@@ -203,8 +203,8 @@ ALTER TABLE sprint_results
 
 -- creacion de la vista de las estadisticas de los pilotos en cada escuderia que devulve el id del piloto, carrera, constructor y qualify, 
 -- fecha y nombre del circuito corrido, apellido del piloto, nombre y nacionalidad de la escuderia, numero del piloto, posicion puntos y qualify 
--- usan las tablas driver/races/lap_times
-CREATE OR REPLACE VIEW `estadistica_del_piloto_escuderia` AS  -- usan tablas driver/qualifying/constructos/constructor_standings/races
+-- usan tablas driver/qualifying/constructos/constructor_standings/races
+CREATE OR REPLACE VIEW `estadistica_del_piloto_escuderia` AS
 select  d.driverId, 
 		q.raceId,
 		q.constructorId,
@@ -231,6 +231,7 @@ group by q.raceId;
 -- usan las tablas driver/races/lap_times
 CREATE OR REPLACE VIEW `resultados_por_carrera_del_piloto` AS
 select  d.driverId, 
+		r.circuitId,
 		l.raceId,
 		d.surname as Apellido, 
 		r.date as Fecha,
@@ -474,7 +475,6 @@ INSERT INTO driver VALUES
 -- TRIGGER (2)
 -- se crea el trigger tr_update_user_at_driver que disparara cuando se hace un update de los datos de la tabla driver y los guarda en una tabla driver_new
 -- DROP TRIGGER `tr_update_user_at_driver`;
-
 CREATE TRIGGER `tr_update_user_at_driver`
 AFTER UPDATE ON `driver`
 FOR EACH ROW
@@ -487,7 +487,6 @@ UPDATE driver SET dob = ("1985-01-07") where driverId = 856;
 -- TRIGGER (3)
 -- se crea el trigger tr_delete_user_at_driver que disparara cuando los datos son eliminados de la tabla driver y los guarda en una tabla driver_new
 -- DROP TRIGGER `tr_delete_user_at_driver`;
-
 CREATE TRIGGER `tr_delete_user_at_driver`
 BEFORE DELETE ON `driver`
 FOR EACH ROW
@@ -500,18 +499,18 @@ DELETE FROM driver WHERE driverId BETWEEN 856 and 857;
 
 
 -- CREACION DE USER
-DROP ROLE IF EXISTS 'app_read', 'app_write';
-CREATE ROLE 'app_read', 'app_write';
-GRANT SELECT ON f1.* TO 'app_read';
-GRANT UPDATE,INSERT,ALTER  ON f1.* TO 'app_write';
+-- DROP ROLE IF EXISTS 'app_read', 'app_write';
+-- CREATE ROLE 'app_read', 'app_write';
+-- GRANT SELECT ON f1_barchi.* TO 'app_read';
+-- GRANT UPDATE,INSERT,ALTER  ON f1_barchi.* TO 'app_write';
 -- usuario con permisos de sólo lectura sobre todas las tablas, sin poder eliminar registros de ninguna tabla.
-DROP USER IF EXISTS 'user1read'@'localhost';
-CREATE USER 'user1read'@'localhost' IDENTIFIED BY 'coder123';
+-- DROP USER IF EXISTS 'user1read'@'localhost';
+-- CREATE USER 'user1read'@'localhost' IDENTIFIED BY 'coder123';
 
 -- usuario con permisos de Lectura, Inserción y Modificación de datos, sin poder eliminar registros de ninguna tabla.
-DROP USER IF EXISTS 'user2rw'@'localhost';
-CREATE USER 'user2rw'@'localhost' IDENTIFIED BY 'coder123';
+-- DROP USER IF EXISTS 'user2rw'@'localhost';
+-- CREATE USER 'user2rw'@'localhost' IDENTIFIED BY 'coder123';
 
-GRANT 'app_write' TO 'user2rw'@'localhost';
-GRANT 'app_read' TO 'user1read'@'localhost', 'user2rw'@'localhost';
-SET DEFAULT ROLE ALL TO 'user1read'@'localhost', 'user2rw'@'localhost';
+-- GRANT 'app_write' TO 'user2rw'@'localhost';
+-- GRANT 'app_read' TO 'user1read'@'localhost', 'user2rw'@'localhost';
+-- SET DEFAULT ROLE ALL TO 'user1read'@'localhost', 'user2rw'@'localhost';

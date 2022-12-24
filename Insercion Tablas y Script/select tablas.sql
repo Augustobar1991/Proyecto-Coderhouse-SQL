@@ -14,6 +14,7 @@ SELECT * FROM sprint_results;
 SELECT * FROM estadistica_del_piloto_escuderia;
 SELECT * FROM resultados_por_carrera_del_piloto;
 SELECT * FROM mejores_resultados_del_piloto;
+SELECT * FROM datos_del_piloto;
 SELECT * FROM temporada;
 SELECT * FROM estadistica_escuderia;  
 SELECT * FROM driver;
